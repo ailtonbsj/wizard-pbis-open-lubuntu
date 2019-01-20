@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=Entrar em um Dominio AD
+Exec=pkexec /opt/wizard-pbis/main.py
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=system-software-install
+Categories=System;Settings;
