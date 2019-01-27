@@ -10,12 +10,13 @@ cd /opt/wizard-pbis/
 AD_DOMAIN=$(cat /tmp/domain.ad)
 AD_USER=$(cat /tmp/user.ad)
 AD_PASS=$(cat /tmp/passwd.ad)
+AD_DCNAME=$(echo $AD_DOMAIN | awk '{split($0,a,"."); print a[1]}')
 
 domainjoin-cli join --disable ssh $AD_DOMAIN $AD_USER $AD_PASS
 
-hasDomainAdm=`grep "%domain^admins ALL=(ALL) ALL" /etc/sudoers`
+hasDomainAdm=`grep "%domain^admins" /etc/sudoers`
 if [ "$hasDomainAdm" == "" ]; then
-	sed -i 's/%admin ALL=(ALL) ALL/%admin ALL=(ALL) ALL\n%domain^admins ALL=(ALL) ALL/g' /etc/sudoers
+	sed -i "s/%admin ALL=(ALL) ALL/%admin ALL=(ALL) ALL\n%$AD_DCNAME\\\\\\\\domain^admins ALL=(ALL) ALL/g" /etc/sudoers
 fi
 
 /opt/pbis/bin/config UserDomainPrefix $AD_DOMAIN
