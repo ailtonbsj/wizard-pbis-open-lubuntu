@@ -1,6 +1,7 @@
 [Desktop Entry]
 Version=1.0
-Name=Entrar em um Dominio AD
+Name=Join to AD Domain
+Name[pt_BR]=Juntar-se a um Domínio AD
 Exec=pkexec /opt/wizard-pbis/main.sh
 Terminal=false
 X-MultipleArgs=false
