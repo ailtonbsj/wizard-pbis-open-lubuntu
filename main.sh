@@ -34,17 +34,25 @@ greetFile="/usr/share/lightdm/lightdm.conf.d/60-lightdm-gtk-greeter.conf"
 
 hasGuest=`grep "allow-guest" $greetFile`
 if [ "$hasGuest" == "" ]; then
-echo "allow-guest=false" >> $greetFile
+	echo "allow-guest=false" >> $greetFile
 else
-	sed 's/allow-guest=true/allow-guest=false/g' $greetFile
+	sed -i 's/allow-guest=true/allow-guest=false/g' $greetFile
 fi
 
 hasManualLogin=`grep "greeter-show-manual-login" $greetFile`
 if [ "$hasManualLogin" == "" ]; then
-echo "greeter-show-manual-login=true" >> $greetFile
+	echo "greeter-show-manual-login=true" >> $greetFile
 else
-	sed 's/greeter-show-manual-login=false/greeter-show-manual-login=true/g' $greetFile
+	sed -i 's/greeter-show-manual-login=false/greeter-show-manual-login=true/g' $greetFile
 fi
+
+hasHideUsers=`grep "greeter-hide-users" $greetFile`
+if [ "$hasHideUsers" == "" ]; then
+	echo "greeter-hide-users=true" >> $greetFile
+else
+	sed -i 's/greeter-hide-users=false/greeter-hide-users=true/g' $greetFile
+fi
+
 dom=$(domainjoin-cli query | grep Domain | awk '{split($0,a," = ");print a[2]}')
 if [ "$dom" == "" ]; then
 	zenity --error --text "Não foi possível se juntar ao domínio!\nVerifique senha, usuário e nome do domínio!" --width=350
