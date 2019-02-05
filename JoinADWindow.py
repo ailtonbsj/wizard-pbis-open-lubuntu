@@ -6,7 +6,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-class GridWindow(Gtk.Window):
+class JoinADWindow(Gtk.Window):
 
 	def __init__(self):
 		Gtk.Window.__init__(self, title="Configurar um Domínio AD")
@@ -28,6 +28,7 @@ class GridWindow(Gtk.Window):
 
 		labelPass = Gtk.Label(label="Senha   ",xalign=0.2)
 		self.entryPass = Gtk.Entry(text="manager")
+		self.entryPass.set_visibility(False)
 		inputPass = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=6)
 		inputPass.pack_start(labelPass, True, True, 0)
 		inputPass.pack_start(self.entryPass, True, True, 0)
@@ -49,7 +50,7 @@ class GridWindow(Gtk.Window):
 		os.system('echo -n '+passwd+' > /tmp/passwd.ad')
 		Gtk.main_quit()
 
-win = GridWindow()
+win = JoinADWindow()
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
 Gtk.main()

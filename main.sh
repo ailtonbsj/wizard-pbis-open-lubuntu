@@ -6,7 +6,7 @@ if [ ! -f /opt/pbis/bin/domainjoin-cli ]; then
 fi
 
 cd /opt/wizard-pbis/
-./gui.py
+./JoinADWindow.py
 AD_DOMAIN=$(cat /tmp/domain.ad)
 AD_USER=$(cat /tmp/user.ad)
 AD_PASS=$(cat /tmp/passwd.ad)
@@ -45,5 +45,58 @@ echo "greeter-show-manual-login=true" >> $greetFile
 else
 	sed 's/greeter-show-manual-login=false/greeter-show-manual-login=true/g' $greetFile
 fi
+dom=$(domainjoin-cli query | grep Domain | awk '{split($0,a," = ");print a[2]}')
+if [ "$dom" == "" ]; then
+	zenity --error --text "Não foi possível se juntar ao domínio!\nVerifique senha, usuário e nome do domínio!" --width=350
+	exit
+fi
 
-zenity --info --text "$(/opt/pbis/bin/domainjoin-cli query)\n\nEh necessario reiniciar!" --width=350
+/opt/pbis/bin/enum-groups | grep Name | grep -v '\^' | grep -v 'dns' | awk '{split($0,a,"\\"); print a[2]}' > /tmp/sGroups
+./RequireMembershipWindow.py
+restric=$(cat /tmp/restric.ad)
+if [ "$restric" != "--Sem Restrição--" ]; then
+	sGroup=$(echo $dom)\\$restric
+	/opt/pbis/bin/config RequireMembershipOf $sGroup
+else
+	/opt/pbis/bin/config RequireMembershipOf ''
+fi
+
+ipServRaw=$(/opt/pbis/bin/get-status | grep 'DC Address' | awk '{split($0,a,":"); print a[2]}')
+ipServ=${ipServRaw//[[:space:]]/}
+
+cat << EOF > /etc/security/pam_mount.conf.xml
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE pam_mount SYSTEM "pam_mount.conf.xml.dtd">
+<pam_mount>
+<debug enable="0" />
+<volume options="nodev,nosuid,dir_mode=0700"
+    user="*"
+    fstype="cifs"
+    server="$ipServ"
+    path="publico"
+    mountpoint="~/Público"
+/>
+EOF
+
+while read group; do
+	cat << EOF >> /etc/security/pam_mount.conf.xml
+<volume options="nodev,nosuid,dir_mode=0700"
+    user="*"
+    fstype="cifs"
+    server="$ipServ"
+    path="$group"
+    mountpoint="~/${group^}"
+    sgrp="$(echo $dom | awk '{split($0,a,"."); print a[1]}')\\$group"
+/>
+EOF
+done < /tmp/sGroups
+
+cat << EOF >> /etc/security/pam_mount.conf.xml
+<mntoptions allow="nosuid,nodev,loop,encryption,fsck,nonempty,allow_root,allow_other" />
+<mntoptions require="nosuid,nodev" />
+<logout wait="0" hup="no" term="no" kill="no" />
+<mkmountpoint enable="1" remove="true" />
+</pam_mount>
+EOF
+
+zenity --info --text "Bem vindo ao Domínio $dom!" --width=350
